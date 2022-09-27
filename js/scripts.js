@@ -1,75 +1,68 @@
-window.addEventListener('DOMContentLoaded', event => {
-
-    // Toggle the side navigation
-    const sidebarToggle = document.body.querySelector('#sidebarToggle');
-    if (sidebarToggle) {
-        // Uncomment Below to persist sidebar toggle between refreshes
-        // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
-        //     document.body.classList.toggle('sb-sidenav-toggled');
-        // }
-        sidebarToggle.addEventListener('click', event => {
-            event.preventDefault();
-            document.body.classList.toggle('sb-sidenav-toggled');
-            localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
-        });
-    }
-
+const API_URL = "https://innafjord.azurewebsites.net/api/"
+const getHeaders = () => ({
+    GroupId: "The Big Blue",
+    GroupKey: "DhGmHnRYukWIgrdD9cueWA==",
 });
-/*knapper*/
-function chagnepowerprice() {
-    fetch("https://innafjord.azurewebsites.net/api/powerprice")
-    .then(r => r.text())
-    .then(r =>
-        document.getElementById("button1").innerText = r
-    )
+
+async function logGroupState() {
+    var groupState = await getGroupState()
+    console.log("groupstate: ", + groupState.money)
+    console.log("waterlevel:", + groupState.waterLevel)
+    console.log("group name:", + groupState.groupName)
+    console.log("env cost:", + groupState.environmentCost)
 }
-function changewaterinflux() {
-    fetch("https://innafjord.azurewebsites.net/api/waterinflux")
-        .then(s => s.text())
-        .then(s =>
-            document.getElementById("button2").innerText = s
-        )
+window.onload = logGroupState() && fillTables()
+
+
+
+/*--------------------------LOG---------------------LOG--------------------------------------------*/
+
+async function logPublicfunc(){
+    var influx = await getWaterinflux()
+    console.log("groupstate: ", + waterinflux)
 }
-function changepowerpriceall() {
-    fetch("https://innafjord.azurewebsites.net/api/powerprice/all")
-        .then(f => f.text())
-        .then(f =>
-            document.getElementById("button3").innerText = f
-        )
+
+async function logPublic() {
+    var waterinflux = await logPublicfunc()
+    console.log(influx)
 }
-/*-------------------------------------------------------------------------------------*/
 
-     fetch("https://innafjord.azurewebsites.net/api/powerprice")
-    .then(request => request.text())
-    .then(request =>
-            document.getElementById("tablepowerprice").innerHTML = request
-    )
 
-    fetch("https://innafjord.azurewebsites.net/api/waterinflux")
-    .then(request => request.text())
-    .then(request =>
-            document.getElementById("tablewaterinflux").innerHTML = request
-    )
-    fetch("https://innafjord.azurewebsites.net/api/GroupState")
-    .then(request => request.text())
-    .then(request =>
-            document.getElementById("waterlevel").innerHTML = request
-    )
-    fetch("https://innafjord.azurewebsites.net/api/waterinflux")
-    .then(request => request.text())
-    .then(request =>
-            document.getElementById("envcost").innerHTML = request
-    )
 
-    const API_URL = "https://innafjord.azurewebsites.net/api/GroupState";
-    const getHeaders = () => ({
-        GroupId: document.getElementById("GroupId").value,
-        GroupKey: document.getElementById("GroupKey").value,
-    });
+/*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-    const getGroupState = () =>
-        fetch(`${API_URL}/GroupState`, {headers: getHeaders()}).then((r) =>
-            r.json()
-        );
-    
-    const moneyEarnedElement = document.getElementById("moneyEarned");
+async function getGroupState() {
+    var request = await fetch(`${API_URL}/GroupState`, {headers: getHeaders()})
+    var groupState = request.json()
+    return groupState
+}
+
+async function getWaterinflux() {
+    var request = await fetch(`${API_URL}/waterinflux`)
+    var influx = request.json()
+    return influx
+}
+
+async function getPowerprice() {
+    var request = await fetch(`${API_URL}/powerprice`)
+    var powerprice = request.json()
+    return powerprice
+}
+
+
+
+/*---------------------------TABLES-------------------------------------------*/
+
+
+async function fillTables() {
+    //group state
+    var groupstate = await getGroupState()
+    document.getElementById("waterlevel").innerHTML = groupstate.waterLevel;
+    document.getElementById("envcost").innerHTML = groupstate.environmentCost
+
+    //change powerprice
+    var powerprice = await getPowerprice()
+    var waterinflux = await getWaterinflux()
+    document.getElementById("tablepowerprice").innerHTML = powerprice;
+    document.getElementById("tablewaterinflux").innerHTML = waterinflux;
+}
